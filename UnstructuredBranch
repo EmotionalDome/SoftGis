@@ -1,0 +1,98 @@
+
+# inputs is data input fed by POSTGRESQL, will be replaced by Oacle  
+# basic 
+class UnstructuredBranch(object):
+    def __init__(self, inputs):
+        self.inputs = inputs
+        
+    # basic pre-processing of text data is treated on pandas dataframe. 
+    # if input is fed by numpy, convert it as pandas dataframe 
+    def Preprocessing(self):
+        import re
+        import string
+        import time
+        import time as t
+        import numpy as np
+        import pandas as pd
+        import itertools
+        from collections import Counter
+        import multiprocessing
+        from gensim.models import Word2Vec
+        
+        # data type checking 
+        if isinstance(self.inputs, pd.DataFrame):
+            pass
+        
+        else: 
+            self.inputs = pd.DataFrame(self.inputs)
+        
+        # multi processing initialization 
+        cores = multiprocessing.cpu_count()
+        
+        # text recognization 
+        target_columns = ['date', 'geometry', 'text']
+        colnames = self.inputs.columns 
+    
+        # if data is not formulated as date, geometry and text, raise Error. 
+        if any(colnames) not in target_columns and self.inputs.shape[1] > 3:
+            raise ImportError('Data format is required to be formed as date, geometry, text format')
+        
+        # data is indeed composed of three dimension such as date, location, text data 
+        # change column names before feeding.
+        else:
+            try:
+                if self.inputs.shape[1] > 3:
+                    raise ValueError('Dimension mismatch') 
+                    
+                else:
+                    self.inputs.columns = target_columns
+            
+            except:
+                pass
+        
+        # removing punctuations using string 
+        def punctuation(text):
+            punc_ = ''.join([i for i in text if i not in string.punctuation])
+            return punc_
+        
+        # Open library makes work easier but in research project, we will show from scretch
+        # how to build Tokenizer and preprocess textual data 
+        # Here, we tokenize using gensim         
+        t = self.inputs.get('text').apply(lambda x: punctuation(x))
+        t = t.apply(lambda x: x.lower())
+        
+        values = t.values
+        # split
+        split = [row.split(' ') for row in values]
+        values = split
+        # Word2Vec using Gensim
+        # for sg 1 : skip gram, sg 0 : bag of words 
+        w2v_model = Word2Vec(values, 
+                             min_count = 20, 
+                             vector_size = 300,
+                             window = 2,
+                             workers = cores - 1, sg = 1)
+        # Parameters
+        # min_counts: ignore words less than 20
+        # window = the maximum distance between the current and predicted word within a sentence 
+        # size = dimensionality, by convention setting by 300 
+        # sample = the threshold for configuring which higher-frequency words are randomly downsampled. 
+        # min_alpha = learning rate will lenearly drop to min_alpha 
+        # negative = negative sampling size is set to 20
+         
+class Word2Vec(nn.Module):
+    def __init__(self, embedding_size, vocab_size):
+        super(Word2Vec, self).__init__()
+        self.embedding_size = embedding_size
+        self.vocab_size 
+        self.embeddings = nn.Embedding(vocab_size, embedding_size)
+        self.fc = nn.Linear(embedding_size, vocab_size)
+        
+    def forward(self, x):
+        embeds = self.embeddings(x)
+        hidden = self.linear(embeds)
+        out = F.log_softmax(hidden)
+        return out 
+        
+# Word2Vec is expected to take only text data here, but if we want to predict based on date and geometry 
+# We need to update it as time & geometry prediction.
